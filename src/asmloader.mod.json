@@ -1,0 +1,11 @@
+{
+	"modid": "texturepackutils",
+	"transformers": [
+		"b100.tputils.asm.TexturePackUtilsTransformer",
+		"b100.tputils.asm.TexturePackUtilsTransformer$MinecraftTransformer",
+		"b100.tputils.asm.TexturePackUtilsTransformer$RenderEngineTransformer",
+		"b100.tputils.asm.TexturePackUtilsTransformer$WorldRendererTransformer",
+		"b100.tputils.betterfoliage.asm.BetterFoliageTransformer",
+		"b100.tputils.coloredtextures.asm.TextureOverrideTransformer"
+	]
+}
