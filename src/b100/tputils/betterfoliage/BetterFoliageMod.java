@@ -81,11 +81,23 @@ public abstract class BetterFoliageMod {
 		leavesRotation = 0.0;
 		
 		ConfigHelper.readConfigFromCurrentTexturePack(mc, configFileName, (key, value) -> parseConfig(key, value));
-		
+
 		if(enableBetterGrass) {
 			if(grassTexCount == 0) {
 				log("Grass texture count is 0, disabling better grass");
 				enableBetterGrass = false;
+			}
+		}
+		if(enableBetterRetroGrass) {
+			if(retroGrassTexCount == 0) {
+				log("Retro grass texture count is 0, disabling better grass");
+				enableBetterRetroGrass = false;
+			}
+		}
+		if(enableBetterScorchedGrass) {
+			if(scorchedGrassTexCount == 0) {
+				log("Scorched grass texture count is 0, disabling better grass");
+				enableBetterScorchedGrass = false;
 			}
 		}
 
@@ -168,12 +180,16 @@ public abstract class BetterFoliageMod {
 				}
 				return renderBetterGrass(renderBlocks, block, x, y, z, r, g, b, grassTexPos, grassTexCount);
 			}
+		}
+		if(enableBetterRetroGrass) {
 			if(block == Block.grassRetro) {
 				if(mc.theWorld.getBlockId(x, y + 1, z) != 0) {
 					return false;
 				}
 				return renderBetterGrass(renderBlocks, block, x, y, z, r, g, b, retroGrassTexPos, retroGrassTexCount);
 			}
+		}
+		if(enableBetterScorchedGrass) {
 			if(block == Block.grassScorched) {
 				if(mc.theWorld.getBlockId(x, y + 1, z) != 0) {
 					return false;
