@@ -2,7 +2,6 @@ package b100.tputils.asm;
 
 import b100.tputils.TexturePackUtils;
 import b100.tputils.betterfoliage.BetterFoliageMod;
-import b100.tputils.coloredtextures.ColoredTexturesMod;
 import b100.tputils.seasonalcolormaps.SeasonalColormapsMod;
 import b100.tputils.seasonaltextures.SeasonalTexturesMod;
 import net.minecraft.client.Minecraft;
@@ -14,7 +13,6 @@ public abstract class TexturePackUtilsASM {
 	public static void onStartup(Minecraft minecraft) {
 		TexturePackUtils.onStartup(minecraft);
 		SeasonalColormapsMod.onStartup(minecraft);
-		ColoredTexturesMod.onStartup(minecraft);
 		BetterFoliageMod.onStartup(minecraft);
 		SeasonalTexturesMod.onStartup(minecraft);
 	}
@@ -22,7 +20,6 @@ public abstract class TexturePackUtilsASM {
 	public static void onRefreshTextures() {
 		TexturePackUtils.onLoad();
 		SeasonalColormapsMod.onLoad();
-		ColoredTexturesMod.onLoad();
 		BetterFoliageMod.onLoad();
 		SeasonalTexturesMod.onLoad();
 	}

@@ -12,7 +12,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.render.texturepack.TexturePackBase;
+import net.minecraft.client.render.texturepack.TexturePack;
 import net.minecraft.client.render.texturepack.TexturePackCustom;
 import net.minecraft.client.render.texturepack.TexturePackDefault;
 
@@ -34,7 +34,7 @@ public abstract class ConfigHelper {
 	 * If the resource does not exist in the texture pack, it will not get it from the jar file.
 	 */
 	public static InputStream getResourceFromCurrentTexturePack(Minecraft minecraft, String path) {
-		TexturePackBase texturePack = minecraft.texturePackList.selectedTexturePack;
+		TexturePack texturePack = minecraft.texturePackList.selectedTexturePack;
 		
 		if(texturePack instanceof TexturePackDefault) {
 			return ConfigHelper.class.getResourceAsStream(path);
@@ -42,7 +42,7 @@ public abstract class ConfigHelper {
 		
 		if(texturePack instanceof TexturePackCustom) {
 			TexturePackCustom texturePackCustom = (TexturePackCustom) texturePack;
-			File texturePackFile = texturePackCustom.texturePackFile;
+			File texturePackFile = texturePackCustom.file;
 			if(texturePackFile.isDirectory()) {
 				File file = new File(texturePackFile, path);
 				

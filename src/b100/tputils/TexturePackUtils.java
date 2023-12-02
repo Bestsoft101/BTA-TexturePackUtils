@@ -6,7 +6,7 @@ import java.io.InputStream;
 import javax.imageio.ImageIO;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.render.texturepack.TexturePackBase;
+import net.minecraft.client.render.texturepack.TexturePack;
 import net.minecraft.core.Global;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.season.Season;
@@ -17,7 +17,7 @@ public abstract class TexturePackUtils {
 	
 	public static Minecraft mc;
 	
-	public static TexturePackBase selectedTexturePack;
+	public static TexturePack selectedTexturePack;
 	
 	public static void onStartup(Minecraft minecraft) {
 		mc = minecraft;
