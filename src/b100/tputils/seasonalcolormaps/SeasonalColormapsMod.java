@@ -18,6 +18,7 @@ import net.minecraft.core.util.phys.Vec3d;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.season.Season;
 import net.minecraft.core.world.season.Seasons;
+import net.minecraft.core.world.type.WorldTypes;
 import net.minecraft.core.world.weather.Weather;
 import net.minecraft.core.world.weather.WeatherManager;
 
@@ -183,6 +184,18 @@ public abstract class SeasonalColormapsMod {
 				ColorHandler color = colors.get(i);
 				if(color.enable()) {
 					setDefaultColors(color);
+				}
+			}
+			return;
+		}
+		
+		if(world.worldType == WorldTypes.OVERWORLD_WINTER) {
+			for(int i=0; i < colors.size(); i++) {
+				ColorHandler color = colors.get(i);
+				if(color.enable()) {
+					for(int j=0; j < color.finalColor.buffer.length; j++) {
+						color.finalColor.buffer[j] = color.winter.buffer[j];
+					}
 				}
 			}
 			return;
