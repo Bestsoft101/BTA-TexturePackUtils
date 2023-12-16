@@ -18,6 +18,8 @@ import net.minecraft.core.util.phys.Vec3d;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.season.Season;
 import net.minecraft.core.world.season.Seasons;
+import net.minecraft.core.world.weather.Weather;
+import net.minecraft.core.world.weather.WeatherManager;
 
 public abstract class SeasonalColormapsMod {
 	
@@ -259,6 +261,28 @@ public abstract class SeasonalColormapsMod {
 			r *= f2;
 			g *= f2;
 			b *= f2;
+			
+			Weather weather = world.getCurrentWeather();
+			WeatherManager weatherManager = world.weatherManager;
+			
+			float weatherStrength = weather != null && weather.isPrecipitation ? weatherManager.getWeatherPower() * weatherManager.getWeatherIntensity() : 0.0f;
+			if(weatherStrength > 0.0f) {
+				float f12 = (r * 0.3f + g * 0.59f + b * 0.11f) * 0.6f;
+				float f10 = weatherStrength * 0.75f;
+				
+				r = MathHelper.lerp(r, f12, f10);
+				g = MathHelper.lerp(g, f12, f10);
+				b = MathHelper.lerp(b, f12, f10);
+			}
+			
+			if(world.lightningFlicker > 0) {
+				float f12 = world.lightningFlicker - partialTicks;
+				if(f12 > 1.0f) f12 = 1.0f;
+				f12 *= 0.45f;
+				r = MathHelper.lerp(r, 0.8f, f12);
+				g = MathHelper.lerp(g, 0.8f, f12);
+				b = MathHelper.lerp(b, 1.0f, f12);
+			}
 			
 			return Vec3d.createVector(r, g, b);
 		}
