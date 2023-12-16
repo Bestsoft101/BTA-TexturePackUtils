@@ -40,6 +40,7 @@ public abstract class BetterFoliageMod {
 	private static int eucalyptusTex;
 	private static int retroTex;
 	private static int shrubTex;
+	private static int cacaoTex;
 	private static double leavesSize;
 	private static double leavesRotation;
 	
@@ -77,6 +78,7 @@ public abstract class BetterFoliageMod {
 		eucalyptusTex = 0;
 		retroTex = 0;
 		shrubTex = 0;
+		cacaoTex = 0;
 		leavesSize = 1.0;
 		leavesRotation = 0.0;
 		
@@ -156,6 +158,8 @@ public abstract class BetterFoliageMod {
 			retroTex = Integer.parseInt(value);
 		}else if(key.equals("shrubTex")) {
 			shrubTex = Integer.parseInt(value);
+		}else if(key.equals("cacaoTex")) {
+			cacaoTex = Integer.parseInt(value);
 		}else if(key.equals("leavesSize")) {
 			leavesSize = Double.parseDouble(value);
 		}else if(key.equals("leavesRotation")) {
@@ -208,6 +212,7 @@ public abstract class BetterFoliageMod {
 			if(block == Block.leavesCherry || block == Block.leavesCherryFlowering) return renderBetterLeaves(renderBlocks, block, x, y, z, r, g, b, cherryTex);
 			if(block == Block.leavesOakRetro) return renderBetterLeaves(renderBlocks, block, x, y, z, r, g, b, retroTex);
 			if(block == Block.leavesShrub) return renderBetterLeaves(renderBlocks, block, x, y, z, r, g, b, shrubTex);
+			if(block == Block.leavesCacao) return renderBetterLeaves(renderBlocks, block, x, y, z, r, g, b, cacaoTex);
 		}
 		return false;
 	}
