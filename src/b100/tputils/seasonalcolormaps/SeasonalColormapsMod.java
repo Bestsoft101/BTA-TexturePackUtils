@@ -38,6 +38,7 @@ public abstract class SeasonalColormapsMod {
 	public static final ColorHandler pineColor = new ColorHandler("/pinecolor.png");
 	public static final ColorHandler eucalyptusColor = new ColorHandler("/eucalyptuscolor.png");
 	public static final ColorHandler shrubColor = new ColorHandler("/shrubcolor.png");
+	public static final ColorHandler cacaoColor = new ColorHandler("/cacaocolor.png");
 	public static final ColorHandler skyColor = new ColorHandler("/skycolor.png");
 	public static final ColorHandler fogColor = new ColorHandler("/fogcolor.png");
 	
@@ -58,6 +59,7 @@ public abstract class SeasonalColormapsMod {
 		colors.add(pineColor);
 		colors.add(eucalyptusColor);
 		colors.add(shrubColor);
+		colors.add(cacaoColor);
 		colors.add(skyColor);
 		colors.add(fogColor);
 	}
@@ -89,6 +91,7 @@ public abstract class SeasonalColormapsMod {
 			addBlockColorOverride(blockColorDispatcher, Block.leavesPine, pineColor);
 			addBlockColorOverride(blockColorDispatcher, Block.leavesEucalyptus, eucalyptusColor);
 			addBlockColorOverride(blockColorDispatcher, Block.leavesShrub, shrubColor);
+			addBlockColorOverride(blockColorDispatcher, Block.leavesCacao, cacaoColor);
 
 			addBlockColorOverride(blockColorDispatcher, Block.layerLeavesOak, foliageColor);
 			
@@ -142,6 +145,8 @@ public abstract class SeasonalColormapsMod {
 			eucalyptusColor.enabledInConfig = Boolean.parseBoolean(value);
 		}else if(key.equals("overrideShrub")) {
 			shrubColor.enabledInConfig = Boolean.parseBoolean(value);
+		}else if(key.equals("overrideCacao")) {
+			cacaoColor.enabledInConfig = Boolean.parseBoolean(value);
 		}else if(key.equals("overrideSky")) {
 			skyColor.enabledInConfig = Boolean.parseBoolean(value);
 		}else if(key.equals("overrideFog")) {
