@@ -173,6 +173,9 @@ public abstract class BetterFoliageMod {
 	}
 	
 	public static boolean onRenderBlock(RenderBlocks renderBlocks, Block block, int x, int y, int z, float r, float g, float b) {
+		if(renderBlocks.overrideBlockTexture != -1) {
+			return false;
+		}
 		if(enableBetterGrass) {
 			if(block == Block.grass) {
 				if(mc.theWorld.getBlockId(x, y + 1, z) != 0) {

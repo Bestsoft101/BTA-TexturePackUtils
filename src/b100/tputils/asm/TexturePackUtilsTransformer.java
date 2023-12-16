@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
@@ -19,11 +20,10 @@ import org.objectweb.asm.tree.VarInsnNode;
 
 import b100.asm.AccessTransformer;
 import b100.asmloader.ClassTransformer;
-import b100.tputils.betterfoliage.asm.BetterFoliageTransformer;
 
 public class TexturePackUtilsTransformer extends ClassTransformer {
 	
-	public BetterFoliageTransformer betterFoliageTransformer = new BetterFoliageTransformer();
+	public BetterFoliageRenderBlocksTransformer betterFoliageTransformer = new BetterFoliageRenderBlocksTransformer();
 	
 	public List<Transformer> transformers = new ArrayList<>();
 	public Map<String, String> accessTransform = new HashMap<>();
@@ -78,7 +78,7 @@ public class TexturePackUtilsTransformer extends ClassTransformer {
 		}
 	}
 	
-	public static class MinecraftTransformer extends ClassTransformer {
+	class MinecraftTransformer extends ClassTransformer {
 		
 		@Override
 		public boolean accepts(String className) {
@@ -100,7 +100,7 @@ public class TexturePackUtilsTransformer extends ClassTransformer {
 
 	}
 	
-	public static class RenderEngineTransformer extends ClassTransformer {
+	class RenderEngineTransformer extends ClassTransformer {
 
 		@Override
 		public boolean accepts(String className) {
@@ -121,7 +121,7 @@ public class TexturePackUtilsTransformer extends ClassTransformer {
 		
 	}
 	
-	public static class WorldRendererTransformer extends ClassTransformer {
+	class WorldRendererTransformer extends ClassTransformer {
 
 		@Override
 		public boolean accepts(String className) {
@@ -139,5 +139,123 @@ public class TexturePackUtilsTransformer extends ClassTransformer {
 		}
 		
 	}
+	
+	class BetterFoliageRenderBlocksTransformer extends ClassTransformer {
+
+		@Override
+		public boolean accepts(String className) {
+			return className.equals("net/minecraft/client/render/RenderBlocks");
+		}
+
+		@Override
+		public void transform(String className, ClassNode classNode) {
+			MethodNode method = ASMHelper.findMethod(classNode, "renderStandardBlock", "(Lnet/minecraft/core/block/Block;IIIFFF)Z");
+			InsnList instructions = method.instructions;
+			
+			AbstractInsnNode returnNode = ASMHelper.findInstruction(instructions.getLast(), true, (n) -> n.getOpcode() == Opcodes.IRETURN);
+
+			InsnList addList = new InsnList();
+			
+			addList.add(new VarInsnNode(Opcodes.ALOAD, 0));
+			addList.add(new VarInsnNode(Opcodes.ALOAD, 1));
+			
+			addList.add(new VarInsnNode(Opcodes.ILOAD, 2));
+			addList.add(new VarInsnNode(Opcodes.ILOAD, 3));
+			addList.add(new VarInsnNode(Opcodes.ILOAD, 4));
+			
+			addList.add(new VarInsnNode(Opcodes.FLOAD, 5));
+			addList.add(new VarInsnNode(Opcodes.FLOAD, 6));
+			addList.add(new VarInsnNode(Opcodes.FLOAD, 7));
+			
+			addList.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "b100/tputils/asm/TexturePackUtilsASM", "onRenderBlock", "(Lnet/minecraft/client/render/RenderBlocks;Lnet/minecraft/core/block/Block;IIIFFF)V"));
+
+			instructions.insertBefore(returnNode, addList);
+		}
+	}
+	
+	class SeasonalColormapsRenderGlobalTransformer extends ClassTransformer {
+		
+		@Override
+		public boolean accepts(String className) {
+			return className.equals("net/minecraft/client/render/RenderGlobal");
+		}
+		
+		@Override
+		public void transform(String className, ClassNode classNode) {
+			MethodNode drawSkyMethod = ASMHelper.findMethod(classNode, "drawSky", "(F)V");
+			
+			if(drawSkyMethod == null) {
+				TexturePackUtilsASM.log("drawSky method not found in RenderGlobal, custom sky color won't work!");
+				return;
+			}
+			
+			if(!replaceSkyColorMethodCall(drawSkyMethod)) {
+				TexturePackUtilsASM.log("getSkyColor method call not found in RenderGlobal.drawSky(), custom sky color won't work!");
+				return;
+			}
+		}
+		
+	}
+	
+	class SeasonalColormapsFogManagerTransformer extends ClassTransformer {
+
+		@Override
+		public boolean accepts(String className) {
+			return className.equals("net/minecraft/client/render/FogManager");
+		}
+
+		@Override
+		public void transform(String className, ClassNode classNode) {
+			MethodNode updateFogColorMethod = ASMHelper.findMethod(classNode, "updateFogColor", "(F)V");
+			
+			if(updateFogColorMethod == null) {
+				TexturePackUtilsASM.log("updateFogColor method not found in FogManager, custom fog color won't work!");
+				return;
+			}
+
+			if(!replaceSkyColorMethodCall(updateFogColorMethod)) {
+				TexturePackUtilsASM.log("getSkyColor method call not found in FogManager.updateFogColor(), custom fog color won't work!");
+			}
+			if(!replaceFogColorMethodCall(updateFogColorMethod)) {
+				TexturePackUtilsASM.log("getFogColor method call not found in FogManager.updateFogColor(), custom fog color won't work!");
+			}
+		}
+		
+	}
+	
+	private static boolean replaceSkyColorMethodCall(MethodNode method) {
+		AbstractInsnNode first = method.instructions.getFirst();
+		
+		AbstractInsnNode oldNode = ASMHelper.findInstruction(first, false, (n) -> n.getOpcode() == Opcodes.INVOKEVIRTUAL && FindInstruction.methodInsn(n, "net/minecraft/core/world/World", "getSkyColor", "(Lnet/minecraft/client/render/camera/ICamera;F)Lnet/minecraft/core/util/phys/Vec3d;"));
+		if(oldNode == null) {
+			return false;
+		}
+		
+		AbstractInsnNode newNode = new MethodInsnNode(Opcodes.INVOKESTATIC, "b100/tputils/asm/TexturePackUtilsASM", "getSkyColor", "(Lnet/minecraft/core/world/World;Lnet/minecraft/client/render/camera/ICamera;F)Lnet/minecraft/core/util/phys/Vec3d;");
+		replaceInstruction(method, oldNode, newNode);
+		
+		return true;
+	}
+	
+	private static boolean replaceFogColorMethodCall(MethodNode method) {
+		AbstractInsnNode first = method.instructions.getFirst();
+		
+		AbstractInsnNode oldNode = ASMHelper.findInstruction(first, false, (n) -> n.getOpcode() == Opcodes.INVOKEVIRTUAL && FindInstruction.methodInsn(n, "net/minecraft/core/world/World", "getFogColor", "(F)Lnet/minecraft/core/util/phys/Vec3d;"));
+		if(oldNode == null) {
+			return false;
+		}
+		
+		AbstractInsnNode newNode = new MethodInsnNode(Opcodes.INVOKESTATIC, "b100/tputils/asm/TexturePackUtilsASM", "getFogColor", "(Lnet/minecraft/core/world/World;F)Lnet/minecraft/core/util/phys/Vec3d;");
+		replaceInstruction(method, oldNode, newNode);
+		
+		return true;
+	}
+	
+	private static void replaceInstruction(MethodNode method, AbstractInsnNode oldIns, AbstractInsnNode newIns) {
+		AbstractInsnNode prev = oldIns.getPrevious();
+		method.instructions.remove(oldIns);
+		method.instructions.insert(prev, newIns);
+	}
+
 
 }

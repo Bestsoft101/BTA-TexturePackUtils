@@ -11,7 +11,10 @@ import b100.tputils.ConfigHelper;
 import b100.tputils.TexturePackUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.block.color.BlockColorDispatcher;
+import net.minecraft.client.render.camera.ICamera;
 import net.minecraft.core.block.Block;
+import net.minecraft.core.util.helper.MathHelper;
+import net.minecraft.core.util.phys.Vec3d;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.season.Season;
 import net.minecraft.core.world.season.Seasons;
@@ -33,7 +36,6 @@ public abstract class SeasonalColormapsMod {
 	public static final ColorHandler eucalyptusColor = new ColorHandler("/eucalyptuscolor.png");
 	public static final ColorHandler shrubColor = new ColorHandler("/shrubcolor.png");
 	public static final ColorHandler skyColor = new ColorHandler("/skycolor.png");
-	public static final ColorHandler seaColor = new ColorHandler("/seacolor.png");
 	public static final ColorHandler fogColor = new ColorHandler("/fogcolor.png");
 	
 	public static float fadeDuration = 1.0f;
@@ -53,9 +55,8 @@ public abstract class SeasonalColormapsMod {
 		colors.add(pineColor);
 		colors.add(eucalyptusColor);
 		colors.add(shrubColor);
-//		colors.add(skyColor);
-//		colors.add(seaColor);
-//		colors.add(fogColor);
+		colors.add(skyColor);
+		colors.add(fogColor);
 	}
 	
 	public static void onStartup(Minecraft minecraft) {
@@ -140,8 +141,6 @@ public abstract class SeasonalColormapsMod {
 			shrubColor.enabledInConfig = Boolean.parseBoolean(value);
 		}else if(key.equals("overrideSky")) {
 			skyColor.enabledInConfig = Boolean.parseBoolean(value);
-		}else if(key.equals("overrideSea")) {
-			seaColor.enabledInConfig = Boolean.parseBoolean(value);
 		}else if(key.equals("overrideFog")) {
 			fogColor.enabledInConfig = Boolean.parseBoolean(value);
 		}else if(key.equals("fadeDuration")) {
@@ -241,6 +240,52 @@ public abstract class SeasonalColormapsMod {
 		for(int i=0; i < data.length; i++) {
 			data[i] = blendColor(buffer1[i], buffer2[i], blend);
 		}
+	}
+	
+	public static Vec3d getSkyColor(World world, ICamera camera, float partialTicks) {
+		if(skyColor.enable()) {
+			float celestialAngle = world.getCelestialAngle(partialTicks);
+			float f2 = MathHelper.clamp(MathHelper.cos(celestialAngle * 3.141593f * 2.0f) * 2.0f + 0.5f, 0.0f, 1.0f);
+			
+			int x = MathHelper.floor_double(mc.activeCamera.getPosition().xCoord);
+			int z = MathHelper.floor_double(mc.activeCamera.getPosition().zCoord);
+			
+			int color = skyColor.getColor().getFromWorldPos(world, x, z);
+			
+			float r = ((color >> 16) & 0xFF) / 255.0f;
+			float g = ((color >>  8) & 0xFF) / 255.0f;
+			float b = ((color >>  0) & 0xFF) / 255.0f;
+			
+			r *= f2;
+			g *= f2;
+			b *= f2;
+			
+			return Vec3d.createVector(r, g, b);
+		}
+		return world.getSkyColor(camera, partialTicks);
+	}
+	
+	public static Vec3d getFogColor(World world, float partialTicks) {
+		if(fogColor.enable()) {
+			float celestialAngle = world.getCelestialAngle(partialTicks);
+			float f2 = MathHelper.clamp(MathHelper.cos(celestialAngle * 3.141593f * 2.0f) * 2.0f + 0.5f, 0.0f, 1.0f);
+			
+			int x = MathHelper.floor_double(mc.activeCamera.getPosition().xCoord);
+			int z = MathHelper.floor_double(mc.activeCamera.getPosition().zCoord);
+			
+			int color = fogColor.getColor().getFromWorldPos(world, x, z);
+
+			float r = ((color >> 16) & 0xFF) / 255.0f;
+			float g = ((color >>  8) & 0xFF) / 255.0f;
+			float b = ((color >>  0) & 0xFF) / 255.0f;
+
+	        r *= f2 * 0.94F + 0.06F;
+	        g *= f2 * 0.94F + 0.06F;
+	        b *= f2 * 0.91F + 0.09F;
+			
+			return Vec3d.createVector(r, g, b);
+		}
+		return world.getFogColor(partialTicks);
 	}
 	
 	private static void setDefaultColors(ColorHandler colors) {
