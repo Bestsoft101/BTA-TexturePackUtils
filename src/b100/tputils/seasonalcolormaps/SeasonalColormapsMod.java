@@ -368,6 +368,10 @@ public abstract class SeasonalColormapsMod {
 			return colormaps.autumn != null ? colormaps.autumn : colormaps.vanilla;
 		} else if(season == Seasons.OVERWORLD_WINTER) {
 			return colormaps.winter != null ? colormaps.winter : colormaps.vanilla;
+		} else if(season == Seasons.PARADISE_SILVER) {
+			return colormaps.silver != null ? colormaps.silver : colormaps.vanilla;
+		} else if(season == Seasons.PARADISE_GOLD) {
+			return colormaps.gold != null ? colormaps.gold : colormaps.vanilla;
 		} else {
 			return colormaps.vanilla;
 		}
@@ -435,6 +439,8 @@ public abstract class SeasonalColormapsMod {
 		private Colormap summer;
 		private Colormap autumn;
 		private Colormap winter;
+		private Colormap silver;
+		private Colormap gold;
 		
 		private Colormap finalColor;
 		
@@ -449,6 +455,8 @@ public abstract class SeasonalColormapsMod {
 				summer = null;
 				autumn = null;
 				winter = null;
+				silver = null;
+				gold = null;
 				finalColor = null;
 				return;
 			}
@@ -457,17 +465,22 @@ public abstract class SeasonalColormapsMod {
 			if(vanilla == null) {
 				vanilla = loadColormap("/misc" + path);
 			}
+			
 			spring = loadColormap("/misc/spring" + path);
 			summer = loadColormap("/misc/summer" + path);
 			autumn = loadColormap("/misc/autumn" + path);
 			winter = loadColormap("/misc/winter" + path);
+			silver = loadColormap("/misc/silver" + path);
+			gold = loadColormap("/misc/gold" + path);
 			
 			if(spring == null) spring = vanilla;
 			if(summer == null) summer = vanilla;
 			if(autumn == null) autumn = vanilla;
 			if(winter == null) winter = vanilla;
+			if(silver == null) silver = vanilla;
+			if(gold == null) gold = vanilla;
 			
-			hasColormaps = spring != null && summer != null && autumn != null && winter != null && vanilla != null;
+			hasColormaps = vanilla != null && spring != null && summer != null && autumn != null && winter != null && silver != null && gold != null;
 			
 			if(enable()) {
 				finalColor = new Colormap();
