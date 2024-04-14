@@ -44,6 +44,18 @@ public abstract class BetterFoliageMod {
 	private static double leavesSize;
 	private static double leavesRotation;
 	
+	private static final boolean shaderModInstalled;
+	
+	static {
+		boolean flag = true;
+		try {
+			b100.shaders.asm.Listeners.class.getName();
+		}catch (Throwable e) {
+			flag = false;
+		}
+		shaderModInstalled = flag;
+	}
+	
 	public static void onStartup(Minecraft minecraft) {
 		log("Startup!");
 		
@@ -218,6 +230,10 @@ public abstract class BetterFoliageMod {
 	}
 	
 	public static boolean renderBetterGrass(RenderBlocks renderBlocks, Block block, int x, int y, int z, float r, float g, float b, int texPos, int texCount) {
+		if(shaderModInstalled) {
+			b100.shaders.asm.Listeners.setBlockID(Block.tallgrass);
+		}
+		
 		Tessellator t = Tessellator.instance;
 		
 		float brightness = block.getBlockBrightness(mc.theWorld, x, y + 1, z);
@@ -259,26 +275,37 @@ public abstract class BetterFoliageMod {
         double y1 = y + 1 + height;
         
         double rot = grassRotation;
-        
+
+		if(shaderModInstalled) b100.shaders.asm.Listeners.setIsTopVertex(0.0f);
         t.addVertexWithUV(x0+rot, y0, z0, u0, v1);
+        if(shaderModInstalled) b100.shaders.asm.Listeners.setIsTopVertex(1.0f);
         t.addVertexWithUV(x0+rot, y1, z0, u0, v0);
         t.addVertexWithUV(x1-rot, y1, z1, u1, v0);
+        if(shaderModInstalled) b100.shaders.asm.Listeners.setIsTopVertex(0.0f);
         t.addVertexWithUV(x1-rot, y0, z1, u1, v1);
         
+        if(shaderModInstalled) b100.shaders.asm.Listeners.setIsTopVertex(0.0f);
         t.addVertexWithUV(x0+rot, y0, z0, u1, v1);
         t.addVertexWithUV(x1-rot, y0, z1, u0, v1);
+        if(shaderModInstalled) b100.shaders.asm.Listeners.setIsTopVertex(1.0f);
         t.addVertexWithUV(x1-rot, y1, z1, u0, v0);
         t.addVertexWithUV(x0+rot, y1, z0, u1, v0);
         
+        if(shaderModInstalled) b100.shaders.asm.Listeners.setIsTopVertex(0.0f);
         t.addVertexWithUV(x1, y0, z0+rot, u0, v1);
+        if(shaderModInstalled) b100.shaders.asm.Listeners.setIsTopVertex(1.0f);
         t.addVertexWithUV(x1, y1, z0+rot, u0, v0);
         t.addVertexWithUV(x0, y1, z1-rot, u1, v0);
+        if(shaderModInstalled) b100.shaders.asm.Listeners.setIsTopVertex(0.0f);
         t.addVertexWithUV(x0, y0, z1-rot, u1, v1);
         
+        if(shaderModInstalled) b100.shaders.asm.Listeners.setIsTopVertex(0.0f);
         t.addVertexWithUV(x1, y0, z0+rot, u1, v1);
         t.addVertexWithUV(x0, y0, z1-rot, u0, v1);
+        if(shaderModInstalled) b100.shaders.asm.Listeners.setIsTopVertex(1.0f);
         t.addVertexWithUV(x0, y1, z1-rot, u0, v0);
         t.addVertexWithUV(x1, y1, z0+rot, u1, v0);
+        if(shaderModInstalled) b100.shaders.asm.Listeners.setIsTopVertex(0.0f);
         return true;
 	}
 	
