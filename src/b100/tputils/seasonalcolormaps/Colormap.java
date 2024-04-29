@@ -2,6 +2,7 @@ package b100.tputils.seasonalcolormaps;
 
 import net.minecraft.core.util.phys.Vec3d;
 import net.minecraft.core.world.World;
+import net.minecraft.core.world.WorldSource;
 
 public class Colormap {
 	
@@ -11,7 +12,7 @@ public class Colormap {
 		return buffer[z << 8 | x];
 	}
 	
-	public int getFromWorldPos(World world, int x, int z) {
+	public int getFromWorldPos(WorldSource world, int x, int z) {
 		double temp = world.getBlockTemperature(x, z);
 		double humidity = world.getBlockHumidity(x, z);
 		

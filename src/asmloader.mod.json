@@ -1,6 +1,6 @@
 {
 	"modid": "texturepackutils",
 	"transformers": [
-		"b100.tputils.asm.TexturePackUtilsTransformer"
+		"b100.tputils.asm.Transformers"
 	]
 }

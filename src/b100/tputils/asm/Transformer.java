@@ -1,8 +1,8 @@
 package b100.tputils.asm;
 
-import static b100.tputils.asm.ASMHelper.*;
-
 import org.objectweb.asm.tree.ClassNode;
+
+import b100.tputils.asm.utils.ASMHelper;
 
 public abstract class Transformer {
 	
@@ -11,19 +11,19 @@ public abstract class Transformer {
 			return bytes;
 		}
 		
-		ClassNode classNode = getClassNode(bytes);
-		TexturePackUtilsASM.log("Transforming "+className);
+		ClassNode classNode = ASMHelper.getClassNode(bytes);
+		Listeners.log("Transforming "+className);
 		ClassNode transformedClass = null;
 		try{
 			transformedClass = transform(className, classNode);
 		}catch (Exception e) {
-			TexturePackUtilsASM.log("Transformation failed with exception!");
+			Listeners.log("Transformation failed with exception!");
 			e.printStackTrace();
 		}
 		if(transformedClass != null) {
-			return getBytes(classNode);
+			return ASMHelper.getBytes(classNode);
 		}else {
-			TexturePackUtilsASM.log("Transformation failed!");
+			Listeners.log("Transformation failed!");
 			return bytes;
 		}
 	}

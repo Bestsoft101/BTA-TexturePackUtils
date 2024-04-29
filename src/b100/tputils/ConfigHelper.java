@@ -2,19 +2,13 @@ package b100.tputils;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.texturepack.TexturePack;
-import net.minecraft.client.render.texturepack.TexturePackCustom;
-import net.minecraft.client.render.texturepack.TexturePackDefault;
 
 public abstract class ConfigHelper {
 	
@@ -30,50 +24,20 @@ public abstract class ConfigHelper {
 	}
 	
 	/**
-	 * Get a resource only from the current texture pack.
-	 * If the resource does not exist in the texture pack, it will not get it from the jar file.
+	 * Get a resource only from the selected texture packs, not from the default pack
 	 */
 	public static InputStream getResourceFromCurrentTexturePack(Minecraft minecraft, String path) {
-		TexturePack texturePack = minecraft.texturePackList.selectedTexturePack;
+		List<TexturePack> selectedPacks = minecraft.texturePackList.selectedPacks;
 		
-		if(texturePack instanceof TexturePackDefault) {
-			return ConfigHelper.class.getResourceAsStream(path);
-		}
-		
-		if(texturePack instanceof TexturePackCustom) {
-			TexturePackCustom texturePackCustom = (TexturePackCustom) texturePack;
-			File texturePackFile = texturePackCustom.file;
-			if(texturePackFile.isDirectory()) {
-				File file = new File(texturePackFile, path);
-				
-				if(file.exists()) {
-					try {
-						return new FileInputStream(file);
-					}catch (Exception e) {
-						e.printStackTrace();
-					}
-				}else {
-					return null;
-				}
-			}else {
-				ZipFile zip = null;
-				try{
-					zip = new ZipFile(texturePackFile);
-					closeables.add(zip);
-					
-					ZipEntry entry = zip.getEntry(path.substring(1));
-					if(entry == null) {
-						return null;
-					}
-					return zip.getInputStream(entry);
-				}catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
+		for(int i=0; i < selectedPacks.size(); i++) {
+			TexturePack texturePack = selectedPacks.get(i);
 			
+			InputStream stream = texturePack.getResourceAsStream(path);
+			if(stream != null) {
+				return stream;
+			}
 		}
-		
-		return texturePack.getResourceAsStream(path);
+		return null;
 	}
 	
 	private static void closeInputStreams() {

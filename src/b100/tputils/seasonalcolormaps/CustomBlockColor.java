@@ -2,7 +2,7 @@ package b100.tputils.seasonalcolormaps;
 
 import b100.tputils.seasonalcolormaps.SeasonalColormapsMod.ColorHandler;
 import net.minecraft.client.render.block.color.BlockColor;
-import net.minecraft.core.world.World;
+import net.minecraft.core.world.WorldSource;
 
 public class CustomBlockColor extends BlockColor {
 
@@ -20,7 +20,7 @@ public class CustomBlockColor extends BlockColor {
 	}
 
 	@Override
-	public int getWorldColor(World world, int x, int y, int z) {
+	public int getWorldColor(WorldSource world, int x, int y, int z) {
 		if(colorHandler.enable()) {
 			return colorHandler.getColor().getFromWorldPos(world, x, z);
 		}

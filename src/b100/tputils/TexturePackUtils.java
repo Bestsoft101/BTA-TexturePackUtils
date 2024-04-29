@@ -1,12 +1,11 @@
 package b100.tputils;
 
 import java.awt.image.BufferedImage;
-import java.io.InputStream;
-
-import javax.imageio.ImageIO;
+import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.texturepack.TexturePack;
+import net.minecraft.client.util.helper.Textures;
 import net.minecraft.core.Global;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.season.Season;
@@ -17,30 +16,23 @@ public abstract class TexturePackUtils {
 	
 	public static Minecraft mc;
 	
-	public static TexturePack selectedTexturePack;
+	public static List<TexturePack> selectedPacks;
 	
 	public static void onStartup(Minecraft minecraft) {
 		mc = minecraft;
 	}
 	
 	public static void onLoad() {
-		selectedTexturePack = mc.texturePackList.selectedTexturePack;
+		selectedPacks = mc.texturePackList.selectedPacks;
 	}
 	
 	public static BufferedImage readTexture(String path) {
-		InputStream stream = selectedTexturePack.getResourceAsStream(path);
-		if(stream == null) {
-			throw new NullPointerException("Resource does not exist: '"+path+"'!");
+		BufferedImage image = mc.renderEngine.getImage(path);
+		if(image == Textures.missingTexture) {
+			// throw new RuntimeException("Texture does not exist: '" + path + "'");
+			return null;
 		}
-		try {
-			return ImageIO.read(stream);
-		}catch (Exception e) {
-			throw new RuntimeException("Error reading texture: '"+path+"'!");
-		}finally {
-			try {
-				stream.close();
-			}catch (Exception e) {}
-		}
+		return image;
 	}
 	
 	public static float getSeasonProgress(World world, Season currentSeason, int dayInSeason) {
@@ -48,7 +40,7 @@ public abstract class TexturePackUtils {
 			return 0.0f;
 		}
 		
-		SeasonManager seasonManager = world.seasonManager;
+		SeasonManager seasonManager = world.getSeasonManager();
 		if(seasonManager instanceof SeasonManagerCycle) {
 			SeasonManagerCycle seasonManagerCycle = (SeasonManagerCycle) seasonManager;
 			

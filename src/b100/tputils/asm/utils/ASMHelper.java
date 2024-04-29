@@ -1,4 +1,4 @@
-package b100.tputils.asm;
+package b100.tputils.asm.utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -187,6 +187,10 @@ public abstract class ASMHelper {
 	
 	//////////////////////////////////////////
 	
+	public static MethodNode findMethod(ClassNode classNode, String name) {
+		return findMethod(classNode, name, null);
+	}
+	
 	public static MethodNode findMethod(ClassNode classNode, String name, String desc) {
 		List<MethodNode> foundMethods = new ArrayList<MethodNode>();
 		
@@ -266,6 +270,10 @@ public abstract class ASMHelper {
 		return list;
 	}
 	
+	public static AbstractInsnNode findInstruction(MethodNode method, boolean backwards, Condition<AbstractInsnNode> condition) {
+		return findInstruction(backwards ? method.instructions.getLast() : method.instructions.getFirst(), backwards, condition);
+	}
+	
 	public static AbstractInsnNode findInstruction(AbstractInsnNode startInstruction, boolean backwards, Condition<AbstractInsnNode> condition) {
 		AbstractInsnNode instruction = startInstruction;
 		while(true) {
@@ -287,13 +295,54 @@ public abstract class ASMHelper {
 		}
 		throw new NullPointerException("Field '"+name+"' does not exist in class "+classNode+"!");
 	}
+
+	//////////////////////////////////////////
+	
+	public static void replaceInstruction(MethodNode method, AbstractInsnNode oldInstruction, AbstractInsnNode newInstruction) {
+		InsnList newInstructions = new InsnList();
+		newInstructions.add(newInstruction);
+		replaceInstruction(method.instructions, oldInstruction, newInstructions);
+	}
+	
+	public static void replaceInstruction(InsnList instructions, AbstractInsnNode oldInstruction, AbstractInsnNode newInstruction) {
+		InsnList newInstructions = new InsnList();
+		newInstructions.add(newInstruction);
+		replaceInstruction(instructions, oldInstruction, newInstructions);
+	}
+	
+	public static void replaceInstruction(MethodNode method, AbstractInsnNode oldInstruction, InsnList newInstructions) {
+		replaceInstruction(method.instructions, oldInstruction, newInstructions);
+	}
+	
+	public static void replaceInstruction(InsnList instructions, AbstractInsnNode oldInstruction, InsnList newInstructions) {
+		if(!instructions.contains(oldInstruction)) {
+			throw new RuntimeException("Can't replace instruction because it's not in list!");
+		}
+		AbstractInsnNode prev = oldInstruction.getPrevious();
+		if(prev != null) {
+			instructions.remove(oldInstruction);
+			instructions.insert(prev, newInstructions);
+			return;
+		}
+		AbstractInsnNode next = oldInstruction.getNext();
+		if(next != null) {
+			instructions.remove(oldInstruction);
+			instructions.insertBefore(next, newInstructions);
+			return;
+		}
+		throw new RuntimeException("No previous or next instruction!");
+	}
 	
 	//////////////////////////////////////////
 	
 	public static Map<Label, String> generateLabelNames(MethodNode methodNode) {
+		return generateLabelNames(methodNode.instructions);
+	}
+	
+	public static Map<Label, String> generateLabelNames(InsnList instructions) {
 		Set<Label> labels = new HashSet<>();
 		List<Label> labelList = new ArrayList<>();
-		for(AbstractInsnNode ins : methodNode.instructions) {
+		for(AbstractInsnNode ins : instructions) {
 			if(ins instanceof LabelNode) {
 				LabelNode labelNode = (LabelNode) ins;
 				Label label = labelNode.getLabel();
@@ -354,11 +403,18 @@ public abstract class ASMHelper {
 	}
 	
 	public static void printInstructions(MethodNode method) {
-		printInstructions(method, generateLabelNames(method));
+		printInstructions(method.instructions, generateLabelNames(method));
 	}
 	
 	public static void printInstructions(MethodNode method, Map<Label, String> labelNames) {
-		InsnList instructions = method.instructions;
+		printInstructions(method.instructions, labelNames);
+	}
+	
+	public static void printInstructions(InsnList instructions) {
+		printInstructions(instructions, generateLabelNames(instructions));
+	}
+	
+	public static void printInstructions(InsnList instructions, Map<Label, String> labelNames) {
 		for(int i=0; i < instructions.size(); i++) {
 			AbstractInsnNode instruction = instructions.get(i); 
 			
@@ -436,24 +492,6 @@ public abstract class ASMHelper {
 		}
 		
 		return type;
-	}
-	
-	@Deprecated
-	public static boolean injectAtStart(MethodNode method, AbstractInsnNode instruction) {
-		method.instructions.insert(method.instructions.getFirst(), instruction);
-		return true;
-	}
-	
-	@Deprecated
-	public static boolean injectBeforeEnd(MethodNode method, InsnList instructionsToInsert) {
-		for(int i = method.instructions.size() - 1; i >= 0; i--) {
-			AbstractInsnNode instruction = method.instructions.get(i);
-			if(instruction.getOpcode() == Opcodes.RETURN) {
-				method.instructions.insertBefore(instruction, instructionsToInsert);
-				return true;
-			}
-		}
-		return false;
 	}
 
 }

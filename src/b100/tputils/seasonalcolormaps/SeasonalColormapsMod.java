@@ -1,11 +1,8 @@
 package b100.tputils.seasonalcolormaps;
 
 import java.awt.image.BufferedImage;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.imageio.ImageIO;
 
 import b100.tputils.ConfigHelper;
 import b100.tputils.TexturePackUtils;
@@ -169,8 +166,8 @@ public abstract class SeasonalColormapsMod {
 		}
 		
 		World world = mc.theWorld;
-		Season currentSeason = world.seasonManager.getCurrentSeason();
-		int dayInSeason = world.seasonManager.getDayInSeason();
+		Season currentSeason = world.getSeasonManager().getCurrentSeason();
+		int dayInSeason = world.getSeasonManager().getDayInSeason();
 		float seasonProgress = TexturePackUtils.getSeasonProgress(world, currentSeason, dayInSeason);
 		
 		boolean update = force || lastTickWorld != world || lastTickSeason != currentSeason || lastTickSeasonProgress != seasonProgress;
@@ -214,7 +211,7 @@ public abstract class SeasonalColormapsMod {
 		float fadeDurationInverse = 1.0f - fadeDuration;
 		
 		if(seasonProgress < 0.5f) {
-			season1 = world.seasonManager.getPreviousSeason();
+			season1 = world.getSeasonManager().getPreviousSeason();
 			season2 = currentSeason;
 			blend = seasonProgress + 0.5f; // 0.5 -> 1.0
 			if(fadeDuration == 0.0f) {
@@ -227,7 +224,7 @@ public abstract class SeasonalColormapsMod {
 			}
 		}else {
 			season1 = currentSeason;
-			season2 = world.seasonManager.getNextSeason();
+			season2 = world.getSeasonManager().getNextSeason();
 			blend = seasonProgress - 0.5f; // 0.0 -> 0.5
 			if(fadeDuration == 0.0f) {
 				blend = 0.0f;
@@ -308,14 +305,18 @@ public abstract class SeasonalColormapsMod {
 	}
 	
 	public static Vec3d getFogColor(World world, float partialTicks) {
+		double x = mc.activeCamera.getX(partialTicks);
+		double y = mc.activeCamera.getY(partialTicks);
+		double z = mc.activeCamera.getZ(partialTicks);
+		
 		if(fogColor.enable()) {
 			float celestialAngle = world.getCelestialAngle(partialTicks);
 			float f2 = MathHelper.clamp(MathHelper.cos(celestialAngle * 3.141593f * 2.0f) * 2.0f + 0.5f, 0.0f, 1.0f);
 			
-			int x = MathHelper.floor_double(mc.activeCamera.getPosition().xCoord);
-			int z = MathHelper.floor_double(mc.activeCamera.getPosition().zCoord);
+			int blockX = MathHelper.floor_double(x);
+			int blockZ = MathHelper.floor_double(z);
 			
-			int color = fogColor.getColor().getFromWorldPos(world, x, z);
+			int color = fogColor.getColor().getFromWorldPos(world, blockX, blockZ);
 
 			float r = ((color >> 16) & 0xFF) / 255.0f;
 			float g = ((color >>  8) & 0xFF) / 255.0f;
@@ -327,7 +328,7 @@ public abstract class SeasonalColormapsMod {
 			
 			return Vec3d.createVector(r, g, b);
 		}
-		return world.getFogColor(partialTicks);
+		return world.getFogColor(x, y, z, partialTicks);
 	}
 	
 	private static void setDefaultColors(ColorHandler colors) {
@@ -396,33 +397,10 @@ public abstract class SeasonalColormapsMod {
 	}
 	
 	private static Colormap loadColormap(String path) {
-		InputStream stream = null;
+		BufferedImage image = TexturePackUtils.readTexture(path);
 		
-		try {
-			stream = TexturePackUtils.selectedTexturePack.getResourceAsStream(path);
-		}catch (Exception e) {
-			e.printStackTrace();
-			try {
-				stream.close();
-			}catch (Exception e1) {}
+		if(image == null) {
 			return null;
-		}
-		
-		if(stream == null) {
-			log("Colormap does not exist: " + path);
-			return null;
-		}
-		
-		BufferedImage image = null;
-		try {
-			image = ImageIO.read(stream);
-		}catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}finally {
-			try {
-				stream.close();
-			}catch (Exception e) {}
 		}
 		
 		if(image.getWidth() != 256 || image.getHeight() != 256) {

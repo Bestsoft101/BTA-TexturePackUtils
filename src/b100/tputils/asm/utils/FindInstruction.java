@@ -1,4 +1,4 @@
-package b100.tputils.asm;
+package b100.tputils.asm.utils;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
