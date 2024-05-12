@@ -3,9 +3,12 @@ package b100.tputils.customatlas;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import b100.tputils.TexturePackUtils;
 import net.minecraft.client.render.texturepack.TexturePack;
@@ -14,8 +17,9 @@ import net.minecraft.client.render.texturepack.TexturePackList;
 import net.minecraft.client.util.helper.Textures;
 
 public class CustomAtlasMod {
-	
+
 	private static Atlas legacyTerrainAtlas = null;
+	private static Atlas legacyTerrainOldAtlas = null;
 	private static Atlas legacyItemsAtlas = null;
 	
 	private static Map<String, BufferedImage> textureOverrides = new HashMap<>();
@@ -26,8 +30,9 @@ public class CustomAtlasMod {
 		}
 		
 		log("Loading legacy tiles");
-		
+
 		legacyTerrainAtlas = Atlas.read(CustomAtlasMod.class.getResourceAsStream("/terrain.tiles"));
+		legacyTerrainOldAtlas = Atlas.read(CustomAtlasMod.class.getResourceAsStream("/terrain_old.tiles"));
 		legacyItemsAtlas = Atlas.read(CustomAtlasMod.class.getResourceAsStream("/items.tiles"));
 		
 		log(legacyTerrainAtlas.size() + " terrain tiles, " + legacyItemsAtlas.size() + " item tiles");
@@ -48,6 +53,12 @@ public class CustomAtlasMod {
 				log("    has terrain.png");
 				loadLegacyTiles();
 				loadAtlas(texturePack, legacyTerrainAtlas, "/terrain.png", "/assets/minecraft/textures/block/");
+			}
+
+			if(texturePack.hasFile("/terrain_old.png")) {
+				log("    has terrain_old.png");
+				loadLegacyTiles();
+				loadAtlas(texturePack, legacyTerrainOldAtlas, "/terrain_old.png", "/assets/minecraft/textures/block/");
 			}
 			
 			if(texturePack.hasFile("/gui/items.png")) {
@@ -115,14 +126,13 @@ public class CustomAtlasMod {
 			BufferedImage tileImage = image.getSubimage(tileWidth * atlasTile.x, tileHeight * atlasTile.y, tileWidth, tileHeight);
 			
 			String path = pathPrefix + atlasTile.name + ".png";
-			log("ADD OVERRIDE " + path);
 			textureOverrides.put(path, tileImage);
 		}
 	}
 	
 	public static List<String> findEntries(TexturePack texturePack, String path, Filter filter) {
 		if(!path.startsWith("/")) {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(path);
 		}
 		
 		if(texturePack instanceof TexturePackCustom) {
@@ -148,7 +158,46 @@ public class CustomAtlasMod {
 						result.add(relativePath);
 					}
 				}
+				return result;
+			}
+			if(texturePackCustom.file.isFile()) {
+				path = path.substring(1);
 				
+				List<String> result = new ArrayList<>();
+				
+				ZipFile zipFile = null;
+				try {
+					zipFile = new ZipFile(texturePackCustom.file);
+					
+					Enumeration<? extends ZipEntry> entries = zipFile.entries();
+					while(entries.hasMoreElements()) {
+						String entry = entries.nextElement().toString();
+						if(!entry.startsWith(path)) {
+							continue;
+						}
+						
+						entry = entry.substring(path.length());
+						if(entry.length() == 0) {
+							continue;
+						}
+						
+						// Only find entries in the given directory, no subdirectories
+						if(entry.indexOf('/') != entry.lastIndexOf('/')) {
+							continue;
+						}
+						
+						entry = "/" + path + entry;
+						if(filter == null || filter.accept(entry)) {
+							result.add(entry);
+						}
+					}
+				}catch (Exception e) {
+					throw new RuntimeException(e);
+				}finally {
+					try {
+						zipFile.close();
+					}catch (Exception e) {}
+				}
 				return result;
 			}
 		}

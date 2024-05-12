@@ -306,7 +306,6 @@ public abstract class SeasonalColormapsMod {
 	
 	public static Vec3d getFogColor(World world, float partialTicks) {
 		double x = mc.activeCamera.getX(partialTicks);
-		double y = mc.activeCamera.getY(partialTicks);
 		double z = mc.activeCamera.getZ(partialTicks);
 		
 		if(fogColor.enable()) {
@@ -328,7 +327,7 @@ public abstract class SeasonalColormapsMod {
 			
 			return Vec3d.createVector(r, g, b);
 		}
-		return world.getFogColor(x, y, z, partialTicks);
+		return world.getFogColor(mc.activeCamera, partialTicks);
 	}
 	
 	private static void setDefaultColors(ColorHandler colors) {
