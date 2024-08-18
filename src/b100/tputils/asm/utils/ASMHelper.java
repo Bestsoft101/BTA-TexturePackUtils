@@ -221,15 +221,8 @@ public abstract class ASMHelper {
 		
 		return foundMethods.get(0);
 	}
-	
 	public static MethodNode findMethod(ClassNode classNode, Condition<MethodNode> condition) {
-		List<MethodNode> foundMethods = new ArrayList<MethodNode>();
-		
-		for(MethodNode methodNode : classNode.methods) {
-			if(condition.isTrue(methodNode)) {
-				foundMethods.add(methodNode);
-			}
-		}
+		List<MethodNode> foundMethods = findAllMethods(classNode, condition);
 		
 		if(foundMethods.size() != 1) {
 			StringBuilder msg = new StringBuilder();
@@ -251,6 +244,20 @@ public abstract class ASMHelper {
 		}
 		
 		return foundMethods.get(0);
+	}
+	
+	public static List<MethodNode> findAllMethods(ClassNode classNode, Condition<MethodNode> condition) {
+		List<MethodNode> foundMethods = new ArrayList<MethodNode>();
+		for(MethodNode methodNode : classNode.methods) {
+			if(condition.isTrue(methodNode)) {
+				foundMethods.add(methodNode);
+			}
+		}
+		return foundMethods;
+	}
+
+	public static List<AbstractInsnNode> findAllInstructions(MethodNode method, Condition<AbstractInsnNode> condition) {
+		return findAllInstructions(method.instructions, condition);
 	}
 	
 	public static List<AbstractInsnNode> findAllInstructions(InsnList instructions, Condition<AbstractInsnNode> condition) {
@@ -294,6 +301,26 @@ public abstract class ASMHelper {
 			}
 		}
 		throw new NullPointerException("Field '"+name+"' does not exist in class "+classNode+"!");
+	}
+
+	//////////////////////////////////////////
+	
+	public static void insertAtStart(MethodNode methodNode, InsnList insert) {
+		insertAtStart(methodNode.instructions, insert);
+	}
+	
+	public static void insertAtStart(InsnList instructions, InsnList insert) {
+		instructions.insertBefore(instructions.getFirst(), insert);
+	}
+	
+	public static void insertBeforeLastReturn(MethodNode methodNode, InsnList insert) {
+		insertBeforeLastReturn(methodNode.instructions, insert);
+	}
+	
+	public static void insertBeforeLastReturn(InsnList instructions, InsnList insert) {
+		AbstractInsnNode returnNode = findInstruction(instructions.getLast(), true, (n) -> FindInstruction.returnInsn(n));
+		
+		instructions.insertBefore(returnNode, insert);
 	}
 
 	//////////////////////////////////////////
@@ -415,18 +442,17 @@ public abstract class ASMHelper {
 	}
 	
 	public static void printInstructions(InsnList instructions, Map<Label, String> labelNames) {
-		for(int i=0; i < instructions.size(); i++) {
-			AbstractInsnNode instruction = instructions.get(i); 
-			
+		AbstractInsnNode instruction = instructions.getFirst();
+		
+		while(instruction != null) {
 			if(instruction instanceof LabelNode) {
 				LabelNode labelNode = (LabelNode) instruction;
 				print(labelNames.get(labelNode.getLabel())+":");
-			}else if(instruction instanceof LineNumberNode) {
-//				LineNumberNode node = (LineNumberNode) instruction;
-//				System.out.println(node.line+":");
 			}else {
 				print("  " + toString(instruction, labelNames));	
 			}
+			
+			instruction = instruction.getNext();
 		}
 	}
 	

@@ -109,14 +109,15 @@ public class Transformers extends ClassTransformer {
 		public void transform(String className, ClassNode classNode) {
 			MethodNode refreshTextures = ASMHelper.findMethod(classNode, "refreshTextures");
 			
-			refreshTextures.instructions.insertBefore(refreshTextures.instructions.getFirst(), new MethodInsnNode(Opcodes.INVOKESTATIC, listenerClass, "beforeRefreshTextures", "()V"));
+			InsnList insert = new InsnList();
+			insert.add(new MethodInsnNode(Opcodes.INVOKESTATIC, listenerClass, "beforeRefreshTextures", "()V"));
+			ASMHelper.insertAtStart(refreshTextures, insert);
 			
-			// Add texture refresh listener
-			InsnList insnList = new InsnList();
-			insnList.add(new MethodInsnNode(Opcodes.INVOKESTATIC, listenerClass, "onRefreshTextures", "()V"));
-			injectBeforeEnd(refreshTextures, insnList);
+			insert = new InsnList();
+			insert.add(new MethodInsnNode(Opcodes.INVOKESTATIC, listenerClass, "onRefreshTextures", "()V"));
+			
+			ASMHelper.insertBeforeLastReturn(refreshTextures, insert);
 		}
-		
 	}
 	
 	class WorldRendererTransformer extends ClassTransformer {
@@ -128,12 +129,10 @@ public class Transformers extends ClassTransformer {
 
 		@Override
 		public void transform(String className, ClassNode classNode) {
-			// Add listener before world render
-			for(MethodNode method : classNode.methods) {
-				if(method.name.equals("renderWorld")) {
-					injectAtStart(method, new MethodInsnNode(Opcodes.INVOKESTATIC, listenerClass, "beginRenderWorld", "()V"));
-				}
-			}
+			MethodNode renderWorld = ASMHelper.findMethod(classNode, "renderWorld");
+			InsnList insert = new InsnList();
+			insert.add(new MethodInsnNode(Opcodes.INVOKESTATIC, listenerClass, "beginRenderWorld", "()V"));
+			ASMHelper.insertAtStart(renderWorld, insert);
 		}
 		
 	}
@@ -222,12 +221,11 @@ public class Transformers extends ClassTransformer {
 			MethodNode generateAtlas = ASMHelper.findMethod(classNode, "generateAtlas");
 			
 			AbstractInsnNode getResourceAsStreamNode = ASMHelper.findInstruction(generateAtlas, false, (n) -> FindInstruction.methodInsn(n, "getResourceAsStream"));
-			AbstractInsnNode readImageNode = ASMHelper.findInstruction(generateAtlas, false, (n) -> FindInstruction.methodInsn(n, "readImage"));
+			AbstractInsnNode readImageNode = ASMHelper.findInstruction(generateAtlas, false, (n) -> FindInstruction.methodInsn(n, "readImageUnhandled"));
 			
 			ASMHelper.replaceInstruction(generateAtlas, getResourceAsStreamNode, new MethodInsnNode(Opcodes.INVOKESTATIC, listenerClass, "getTextureOverride", "(Lnet/minecraft/client/render/texturepack/TexturePackList;Ljava/lang/String;)Ljava/awt/image/BufferedImage;"));
 			generateAtlas.instructions.remove(readImageNode);
 		}
-		
 	}
 	
 	private static boolean replaceSkyColorMethodCall(MethodNode method) {
@@ -262,23 +260,5 @@ public class Transformers extends ClassTransformer {
 		AbstractInsnNode prev = oldIns.getPrevious();
 		method.instructions.remove(oldIns);
 		method.instructions.insert(prev, newIns);
-	}
-	
-	@Deprecated
-	public static boolean injectAtStart(MethodNode method, AbstractInsnNode instruction) {
-		method.instructions.insert(method.instructions.getFirst(), instruction);
-		return true;
-	}
-	
-	@Deprecated
-	public static boolean injectBeforeEnd(MethodNode method, InsnList instructionsToInsert) {
-		for(int i = method.instructions.size() - 1; i >= 0; i--) {
-			AbstractInsnNode instruction = method.instructions.get(i);
-			if(instruction.getOpcode() == Opcodes.RETURN) {
-				method.instructions.insertBefore(instruction, instructionsToInsert);
-				return true;
-			}
-		}
-		return false;
 	}
 }

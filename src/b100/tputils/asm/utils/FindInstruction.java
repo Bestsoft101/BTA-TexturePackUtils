@@ -1,5 +1,6 @@
 package b100.tputils.asm.utils;
 
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.IntInsnNode;
@@ -22,7 +23,7 @@ public class FindInstruction {
 	public static boolean methodInsn(AbstractInsnNode node, String name) {
 		if(node instanceof MethodInsnNode) {
 			MethodInsnNode node1 = (MethodInsnNode) node;
-			return node1.name.equals(name);
+			return name == null || node1.name.equals(name);
 		}
 		return false;
 	}
@@ -33,7 +34,7 @@ public class FindInstruction {
 	public static boolean methodInsn(AbstractInsnNode node, String name, String desc) {
 		if(node instanceof MethodInsnNode) {
 			MethodInsnNode node1 = (MethodInsnNode) node;
-			return node1.name.equals(name) && node1.desc.equals(desc);
+			return (name == null || node1.name.equals(name)) && (desc == null || node1.desc.equals(desc));
 		}
 		return false;
 	}
@@ -44,7 +45,7 @@ public class FindInstruction {
 	public static boolean methodInsn(AbstractInsnNode node, String owner, String name, String desc) {
 		if(node instanceof MethodInsnNode) {
 			MethodInsnNode node1 = (MethodInsnNode) node;
-			return node1.owner.equals(owner) && node1.name.equals(name) && node1.desc.equals(desc);
+			return (owner == null || node1.owner.equals(owner)) && (name == null || node1.name.equals(name)) && (desc == null || node1.desc.equals(desc));
 		}
 		return false;
 	}
@@ -55,7 +56,7 @@ public class FindInstruction {
 	public static boolean fieldInsn(AbstractInsnNode node, String name) {
 		if(node instanceof FieldInsnNode) {
 			FieldInsnNode node1 = (FieldInsnNode) node;
-			return node1.name.equals(name);
+			return name == null || node1.name.equals(name);
 		}
 		return false;
 	}
@@ -66,7 +67,7 @@ public class FindInstruction {
 	public static boolean fieldInsn(AbstractInsnNode node, String owner, String name) {
 		if(node instanceof FieldInsnNode) {
 			FieldInsnNode node1 = (FieldInsnNode) node;
-			return node1.owner.equals(owner) && node1.name.equals(name);
+			return (owner == null || node1.owner.equals(owner)) && (name == null || node1.name.equals(name));
 		}
 		return false;
 	}
@@ -77,7 +78,7 @@ public class FindInstruction {
 	public static boolean fieldInsn(AbstractInsnNode node, String owner, String name, String desc) {
 		if(node instanceof FieldInsnNode) {
 			FieldInsnNode node1 = (FieldInsnNode) node;
-			return node1.owner.equals(owner) && node1.name.equals(name) && node1.desc.equals(desc);
+			return (owner == null || node1.owner.equals(owner)) && (name == null || node1.name.equals(name)) && (desc == null || node1.desc.equals(desc));
 		}
 		return false;
 	}
@@ -131,12 +132,35 @@ public class FindInstruction {
 	}
 	
 	/**
+	 * Check if the given instruction is a LdcInsnNode with the given string value
+	 */
+	public static boolean ldcInsnS(AbstractInsnNode node, String cst) {
+		if(node instanceof LdcInsnNode) {
+			LdcInsnNode ldc = (LdcInsnNode) node;
+			if(ldc.cst instanceof String) {
+				return ldc.cst.equals(cst);
+			}
+		}
+		return false;
+	}
+	
+	/**
 	 * Check if the given instruction is a LdcInsnNode with the given value
 	 */
 	public static boolean varInsn(AbstractInsnNode node, int var) {
 		if(node instanceof VarInsnNode) {
 			VarInsnNode node1 = (VarInsnNode) node;
 			return node1.var == var;
+		}
+		return false;
+	}
+	
+	/**
+	 * Check if the given instruction has any of the RETURN opcodes
+	 */
+	public static boolean returnInsn(AbstractInsnNode node) {
+		if(node != null) {
+			return node.getOpcode() >= Opcodes.IRETURN && node.getOpcode() <= Opcodes.RETURN;
 		}
 		return false;
 	}
